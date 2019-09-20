@@ -99,7 +99,7 @@ const getAllProperties = function(options, limit = 10) {
   let queryString = `
   SELECT properties.*, avg(property_reviews.rating) AS average_rating
   FROM properties
-  JOIN property_reviews ON property_id = properties.id`
+  LEFT JOIN property_reviews ON property_id = properties.id`
 
   if (options.city || options.owner_id || options.minimum_price_per_night || options.maximum_price_per_night) {
     queryString += `
@@ -117,7 +117,7 @@ const getAllProperties = function(options, limit = 10) {
 
   if (options.owner_id) {
     values.push(`${options.owner_id}`)
-    queryString += `owner_id LIKE $${values.length}`;
+    queryString += `owner_id = $${values.length}`;
   }
 
   if ((options.city || options.owner_id) && options.minimum_price_per_night) {
@@ -170,8 +170,6 @@ const addProperty = function(property) {
   const values = [`${property.owner_id}`, `${property.title}`, `${property.description}`, `${property.thumbnail_photo_url}`, `${property.cover_photo_url}`, `${property.cost_per_night}`, `${property.street}`, `${property.city}`, `${property.province}`, `${property.post_code}`, `${property.country}`, `${property.parking_spaces}`, `${property.number_of_bathrooms}`, `${property.number_of_bedrooms}`]
   return pool.query(queryString, values)
   .then(res => {
-    console.error('hey');
-    console.error(res.rows);
     res.rows})
   .catch(err => console.error('query error', err.stack));
 }
