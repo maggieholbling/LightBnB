@@ -1,15 +1,4 @@
-const { Pool } = require('pg');
-
-const pool = new Pool({
-  user: 'vagrant',
-  password: '123',
-  host: 'localhost',
-  database: 'lightbnb'
-});
-
-
-const properties = require('./json/properties.json');
-const users = require('./json/users.json');
+const db = require('./db/index');
 
 /// Users
 
@@ -19,7 +8,7 @@ const users = require('./json/users.json');
  * @return {Promise<{}>} A promise to the user.
  */
 const getUserWithEmail = function(email) {
-  return pool.query(`SELECT id, name, email, password
+  return db.pool.query(`SELECT id, name, email, password
     FROM users
     WHERE users.email = $1;
   `, [`${email}`])
@@ -37,7 +26,7 @@ exports.getUserWithEmail = getUserWithEmail;
  * @return {Promise<{}>} A promise to the user.
  */
 const getUserWithId = function(id) {
-  return pool.query(`SELECT id, name, email, password
+  return db.pool.query(`SELECT id, name, email, password
     FROM users
     WHERE users.id = $1;
   `, [`${id}`])
@@ -56,7 +45,7 @@ exports.getUserWithId = getUserWithId;
  */
 const addUser =  function(user) {
 
-  return pool.query(`INSERT INTO users (name, email, password)
+  return db.pool.query(`INSERT INTO users (name, email, password)
     VALUES ($1, $2, $3)
     RETURNING *;
   `, [`${user.name}`, `${user.email}`, `${user.password}`])
@@ -73,7 +62,7 @@ exports.addUser = addUser;
  * @return {Promise<[{}]>} A promise to the reservations.
  */
 const getAllReservations = function(guest_id, limit = 10) {
-  return pool.query(`SELECT reservations.*, properties.*, avg(property_reviews.rating) AS average_rating
+  return db.pool.query(`SELECT reservations.*, properties.*, avg(property_reviews.rating) AS average_rating
   FROM reservations
   JOIN properties ON properties.id = reservations.property_id
   JOIN property_reviews ON properties.id = property_reviews.property_id
@@ -151,7 +140,7 @@ const getAllProperties = function(options, limit = 10) {
     ORDER BY cost_per_night
     LIMIT $1;`;
   
-  return pool.query(queryString, values)
+  return db.pool.query(queryString, values)
   .then(res => res.rows)
   .catch(err => console.error('query error', err.stack));
 }
@@ -168,7 +157,7 @@ const addProperty = function(property) {
   VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
   RETURNING *;`
   const values = [`${property.owner_id}`, `${property.title}`, `${property.description}`, `${property.thumbnail_photo_url}`, `${property.cover_photo_url}`, `${property.cost_per_night}`, `${property.street}`, `${property.city}`, `${property.province}`, `${property.post_code}`, `${property.country}`, `${property.parking_spaces}`, `${property.number_of_bathrooms}`, `${property.number_of_bedrooms}`]
-  return pool.query(queryString, values)
+  return db.pool.query(queryString, values)
   .then(res => {
     res.rows})
   .catch(err => console.error('query error', err.stack));
